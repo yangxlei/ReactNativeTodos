@@ -8,13 +8,13 @@ import Task from '../models/Task';
 
 
 const initialState = {
-    tasks: [{ name: 'Add Clock', startTime: 0, endTime: 10 }],
+    tasks: [{ id: 1, name: 'Task1', startTime: 0, endTime: 10, desc: 'hahahah' }, { id: 2, name: 'Task2', startTime: 0, endTime: 10 }],
 } as State;
 
 function addTask(tasks: Array<Task>, action: Action) {
 
     const newTask = {
-        id: 100,
+        id: Math.random() * 1000,
         name: action.name,
         startTime: action.startTime,
         endTime: action.endTime,
