@@ -9,12 +9,14 @@ import { NavigationScreenProp, NavigationState, NavigationTransitionProps } from
 
 import TextInputView from '../components/TextInputView';
 import { connect } from 'react-redux';
-import { State } from '../reducers/action';
+import { State, addTask, changeTask } from '../reducers/action';
 import Task from '../models/Task';
 
 interface Props {
     findTask: (taskId: number) => Task | undefined;
     navigation: NavigationScreenProp<NavigationState>;
+    createTask: (task: Task) => void;
+    modifyTask: (task: Task) => void;
 }
 
 interface EditScreenState {
@@ -28,7 +30,9 @@ class EditScreen extends React.Component<Props, EditScreenState> {
             title: navigation.getParam('id') ? 'Edit' : 'Add',
             headerRight: (
                 <Button title="Confirm"
-                    onPress={() => { }} />
+                    onPress={() => {
+                        navigation.getParam('commit')();
+                    }} />
             )
         }
     }
@@ -38,6 +42,22 @@ class EditScreen extends React.Component<Props, EditScreenState> {
         this.state = {
             task: props.findTask(props.navigation.getParam('id')) || {} as Task,
         } as EditScreenState;
+        this.props.navigation.setParams({ commit: this.commit.bind(this) });
+    }
+
+    commit() {
+        const { task } = this.state;
+
+        if (task.name && task.startTime !== undefined && task.endTime !== undefined) {
+            if (task.id !== undefined) {
+                this.props.modifyTask(task);
+            } else {
+                this.props.createTask(task);
+            }
+            this.props.navigation.pop();
+        } else {
+            //TOAST 
+        }
     }
 
     public render() {
@@ -47,6 +67,12 @@ class EditScreen extends React.Component<Props, EditScreenState> {
                 <TextInputView title="名称: " titleStyle={{ fontSize: 16, color: 'black' }}
                     value={task.name}
                     onChangeText={(text) => {
+                        this.setState({
+                            task: {
+                                ...task,
+                                name: text
+                            }
+                        });
                     }}
                     style={{
                         borderBottomColor: '#CCC',
@@ -57,6 +83,12 @@ class EditScreen extends React.Component<Props, EditScreenState> {
                 <TextInputView title="描述: " titleStyle={{ fontSize: 16, color: 'black' }}
                     value={task.desc}
                     onChangeText={(text) => {
+                        this.setState({
+                            task: {
+                                ...task,
+                                desc: text
+                            }
+                        });
                     }}
                     style={{
                         borderBottomColor: '#CCC',
@@ -64,8 +96,14 @@ class EditScreen extends React.Component<Props, EditScreenState> {
                     }} />
                 <View style={{ flexDirection: 'row', }}>
                     <TextInputView title="开始: " titleStyle={{ fontSize: 16, color: 'black' }}
-                        value={`${task.startTime & 0}`}
+                        value={`${task.startTime === undefined ? 0 : task.startTime}`}
                         onChangeText={(text) => {
+                            this.setState({
+                                task: {
+                                    ...task,
+                                    startTime: Number(text)
+                                }
+                            });
                         }}
                         style={{
                             borderBottomColor: '#CCC',
@@ -74,8 +112,14 @@ class EditScreen extends React.Component<Props, EditScreenState> {
                         }} />
 
                     <TextInputView title="结束: " titleStyle={{ fontSize: 16, color: 'black' }}
-                        value={`${task.endTime & 0}`}
+                        value={`${task.endTime === undefined ? 0 : task.endTime}`}
                         onChangeText={(text) => {
+                            this.setState({
+                                task: {
+                                    ...task,
+                                    endTime: Number(text)
+                                }
+                            });
                         }}
                         style={{
                             borderBottomColor: '#CCC',
@@ -91,5 +135,14 @@ class EditScreen extends React.Component<Props, EditScreenState> {
 export default connect((state: State) => {
     return {
         findTask: (taskId: number) => state.tasks.find(task => task.id === taskId),
+    }
+}, dispatch => {
+    return {
+        createTask: (task: Task) => {
+            dispatch(addTask(task.name, task.startTime, task.endTime, task.desc));
+        },
+        modifyTask: (task: Task) => {
+            dispatch(changeTask(task.id, task.name, task.startTime, task.endTime, task.desc));
+        }
     }
 })(EditScreen);

@@ -21,11 +21,23 @@ export function initTasks() {
     } as Action;
 }
 
-export function addTask(name: string, startTime: number, endTime: number): Action {
+export function addTask(name: string, startTime: number, endTime: number, desc?: string, ): Action {
     return {
         type: ACTION_TYPE_ADD_TASK,
         name,
         startTime,
         endTime,
+        desc,
+    } as Action;
+}
+
+export function changeTask(taskId: number, name: string, startTime: number, endTime: number, desc?: string, ): Action {
+    return {
+        type: ACTION_TYPE_EDIT_TASK,
+        taskId,
+        name,
+        startTime,
+        endTime,
+        desc,
     } as Action;
 }

@@ -88481,6 +88481,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     return [newTask].concat((0, _toConsumableArray2.default)(tasks));
   }
 
+  function changeTask(tasks, action) {
+    var index = tasks.findIndex(function (task) {
+      return task.id === action.taskId;
+    });
+    var task = tasks[index];
+    tasks[index] = (0, _objectSpread2.default)({}, task, action);
+    return (0, _toConsumableArray2.default)(tasks);
+  }
+
   var _default = function _default() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
     var action = arguments.length > 1 ? arguments[1] : undefined;
@@ -88493,6 +88502,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       case _action.ACTION_TYPE_ADD_TASK:
         return (0, _objectSpread2.default)({}, state, {
           tasks: addTask(state.tasks, action)
+        });
+
+      case _action.ACTION_TYPE_EDIT_TASK:
+        return (0, _objectSpread2.default)({}, state, {
+          tasks: changeTask(state.tasks, action)
         });
     }
 
@@ -88507,6 +88521,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   });
   exports.initTasks = initTasks;
   exports.addTask = addTask;
+  exports.changeTask = changeTask;
   exports.ACTION_TYPE_EDIT_TASK = exports.ACTION_TYPE_INIT = exports.ACTION_TYPE_ADD_TASK = void 0;
   var ACTION_TYPE_ADD_TASK = 'action_type_add_task';
   exports.ACTION_TYPE_ADD_TASK = ACTION_TYPE_ADD_TASK;
@@ -88521,12 +88536,24 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     };
   }
 
-  function addTask(name, startTime, endTime) {
+  function addTask(name, startTime, endTime, desc) {
     return {
       type: ACTION_TYPE_ADD_TASK,
       name: name,
       startTime: startTime,
-      endTime: endTime
+      endTime: endTime,
+      desc: desc
+    };
+  }
+
+  function changeTask(taskId, name, startTime, endTime, desc) {
+    return {
+      type: ACTION_TYPE_EDIT_TASK,
+      taskId: taskId,
+      name: name,
+      startTime: startTime,
+      endTime: endTime,
+      desc: desc
     };
   }
 },570,[],"src/reducers/action.ts");
@@ -88747,25 +88774,31 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   });
   exports.default = void 0;
 
-  var _classCallCheck2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/classCallCheck"));
+  var _objectSpread2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/objectSpread"));
 
-  var _createClass2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "@babel/runtime/helpers/createClass"));
+  var _classCallCheck2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "@babel/runtime/helpers/classCallCheck"));
 
-  var _possibleConstructorReturn2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[3], "@babel/runtime/helpers/possibleConstructorReturn"));
+  var _createClass2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[3], "@babel/runtime/helpers/createClass"));
 
-  var _getPrototypeOf2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[4], "@babel/runtime/helpers/getPrototypeOf"));
+  var _possibleConstructorReturn2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[4], "@babel/runtime/helpers/possibleConstructorReturn"));
 
-  var _inherits2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[5], "@babel/runtime/helpers/inherits"));
+  var _getPrototypeOf2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[5], "@babel/runtime/helpers/getPrototypeOf"));
 
-  var _react = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[6], "react"));
+  var _inherits2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[6], "@babel/runtime/helpers/inherits"));
 
-  var _index = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "./../../node_modules/react-transform-hmr/lib/index.js"));
+  var _assertThisInitialized2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "@babel/runtime/helpers/assertThisInitialized"));
 
-  var _reactNative = _$$_REQUIRE(_dependencyMap[8], "react-native");
+  var _react = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "react"));
 
-  var _TextInputView = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "../components/TextInputView"));
+  var _index = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "./../../node_modules/react-transform-hmr/lib/index.js"));
 
-  var _reactRedux = _$$_REQUIRE(_dependencyMap[10], "react-redux");
+  var _reactNative = _$$_REQUIRE(_dependencyMap[10], "react-native");
+
+  var _TextInputView = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[11], "../components/TextInputView"));
+
+  var _reactRedux = _$$_REQUIRE(_dependencyMap[12], "react-redux");
+
+  var _action = _$$_REQUIRE(_dependencyMap[13], "../reducers/action");
 
   var _jsxFileName = "/Users/yanglei/Documents/react-native/ReactNativeTodos/src/edit/index.tsx";
   var _components = {
@@ -88798,17 +88831,39 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _this.state = {
         task: props.findTask(props.navigation.getParam('id')) || {}
       };
+
+      _this.props.navigation.setParams({
+        commit: _this.commit.bind((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)))
+      });
+
       return _this;
     }
 
     (0, _createClass2.default)(EditScreen, [{
+      key: "commit",
+      value: function commit() {
+        var task = this.state.task;
+
+        if (task.name && task.startTime !== undefined && task.endTime !== undefined) {
+          if (task.id !== undefined) {
+            this.props.modifyTask(task);
+          } else {
+            this.props.createTask(task);
+          }
+
+          this.props.navigation.pop();
+        } else {}
+      }
+    }, {
       key: "render",
       value: function render() {
+        var _this2 = this;
+
         var task = this.state.task;
         return _react.default.createElement(_reactNative.View, {
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 46
+            lineNumber: 66
           }
         }, _react.default.createElement(_TextInputView.default, {
           title: "\u540D\u79F0: ",
@@ -88817,7 +88872,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             color: 'black'
           },
           value: task.name,
-          onChangeText: function onChangeText(text) {},
+          onChangeText: function onChangeText(text) {
+            _this2.setState({
+              task: (0, _objectSpread2.default)({}, task, {
+                name: text
+              })
+            });
+          },
           style: {
             borderBottomColor: '#CCC',
             borderBottomWidth: 1,
@@ -88825,7 +88886,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           },
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 47
+            lineNumber: 67
           }
         }), _react.default.createElement(_TextInputView.default, {
           title: "\u63CF\u8FF0: ",
@@ -88833,15 +88894,21 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             fontSize: 16,
             color: 'black'
           },
-          value: task ? task.desc : '',
-          onChangeText: function onChangeText(text) {},
+          value: task.desc,
+          onChangeText: function onChangeText(text) {
+            _this2.setState({
+              task: (0, _objectSpread2.default)({}, task, {
+                desc: text
+              })
+            });
+          },
           style: {
             borderBottomColor: '#CCC',
             borderBottomWidth: 1
           },
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 57
+            lineNumber: 83
           }
         }), _react.default.createElement(_reactNative.View, {
           style: {
@@ -88849,7 +88916,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           },
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 65
+            lineNumber: 97
           }
         }, _react.default.createElement(_TextInputView.default, {
           title: "\u5F00\u59CB: ",
@@ -88857,8 +88924,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             fontSize: 16,
             color: 'black'
           },
-          value: "" + (task.startTime & 0),
-          onChangeText: function onChangeText(text) {},
+          value: "" + (task.startTime === undefined ? 0 : task.startTime),
+          onChangeText: function onChangeText(text) {
+            _this2.setState({
+              task: (0, _objectSpread2.default)({}, task, {
+                startTime: Number(text)
+              })
+            });
+          },
           style: {
             borderBottomColor: '#CCC',
             borderBottomWidth: 1,
@@ -88866,7 +88939,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           },
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 66
+            lineNumber: 98
           }
         }), _react.default.createElement(_TextInputView.default, {
           title: "\u7ED3\u675F: ",
@@ -88874,8 +88947,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             fontSize: 16,
             color: 'black'
           },
-          value: "" + (task.endTime & 0),
-          onChangeText: function onChangeText(text) {},
+          value: "" + (task.endTime === undefined ? 0 : task.endTime),
+          onChangeText: function onChangeText(text) {
+            _this2.setState({
+              task: (0, _objectSpread2.default)({}, task, {
+                endTime: Number(text)
+              })
+            });
+          },
           style: {
             borderBottomColor: '#CCC',
             borderBottomWidth: 1,
@@ -88883,7 +88962,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           },
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 76
+            lineNumber: 114
           }
         })));
       }
@@ -88897,10 +88976,12 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       title: navigation.getParam('id') ? 'Edit' : 'Add',
       headerRight: _react.default.createElement(_reactNative.Button, {
         title: "Confirm",
-        onPress: function onPress() {},
+        onPress: function onPress() {
+          navigation.getParam('commit')();
+        },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 30
+          lineNumber: 32
         }
       })
     };
@@ -88916,10 +88997,19 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         });
       }
     };
+  }, function (dispatch) {
+    return {
+      createTask: function createTask(task) {
+        dispatch((0, _action.addTask)(task.name, task.startTime, task.endTime, task.desc));
+      },
+      modifyTask: function modifyTask(task) {
+        dispatch((0, _action.changeTask)(task.id, task.name, task.startTime, task.endTime, task.desc));
+      }
+    };
   })(EditScreen);
 
   exports.default = _default2;
-},573,[1,25,26,41,44,47,2,183,9,692,547],"src/edit/index.tsx");
+},573,[1,55,25,26,41,44,47,43,2,183,9,692,547,570],"src/edit/index.tsx");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   module.exports = {
     get createAppContainer() {

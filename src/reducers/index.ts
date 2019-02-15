@@ -3,6 +3,7 @@ import {
     State,
     ACTION_TYPE_ADD_TASK,
     ACTION_TYPE_INIT,
+    ACTION_TYPE_EDIT_TASK,
 } from './action';
 import Task from '../models/Task';
 
@@ -23,6 +24,17 @@ function addTask(tasks: Array<Task>, action: Action) {
     return [newTask, ...tasks];
 }
 
+function changeTask(tasks: Array<Task>, action: Action) {
+    const index = tasks.findIndex((task) => task.id === action.taskId);
+    const task = tasks[index];
+
+    tasks[index] = {
+        ...task,
+        ...action
+    }
+    return [...tasks];
+}
+
 export default (state = initialState, action: Action): State => {
     console.log(`actions ${action.type}`);
     switch (action.type) {
@@ -33,6 +45,11 @@ export default (state = initialState, action: Action): State => {
                 ...state,
                 tasks: addTask(state.tasks, action)
             };
+        case ACTION_TYPE_EDIT_TASK:
+            return {
+                ...state,
+                tasks: changeTask(state.tasks, action)
+            }
     }
     return state;
 }
