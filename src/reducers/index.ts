@@ -36,7 +36,6 @@ function changeTask(tasks: Array<Task>, action: Action) {
 }
 
 export default (state = initialState, action: Action): State => {
-    console.log(`actions ${action.type}`);
     switch (action.type) {
         case ACTION_TYPE_INIT:
             return initialState;
